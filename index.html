@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="מופיע שם של יישוב — האם הוא קיים בישראל? משחק ניחוש מהנה עם 1,244 יישובים אמיתיים ושמות בדויים">
+  <meta property="og:title" content="קיים או לא? — משחק ניחוש יישובים">
+  <meta property="og:description" content="מופיע שם של יישוב — צריך לנחש אם הוא קיים בישראל או לא. 3 חיים, 10 שניות לשאלה. כמה תצליחו?">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0f0f1a">
+  <title>קיים או לא?</title>
+  <style>
+:root {
+  --bg: #0f0f1a;
+  --bg-card: #1a1a2e;
+  --text: #e8e8f0;
+  --text-dim: #8888aa;
+  --accent: #6c63ff;
+  --accent-hover: #5a52e0;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --border: #2a2a4a;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.2s ease;
+  --max-width: 480px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Arial, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { direction: rtl; font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+h1 { font-size: 2rem; text-align: center; line-height: 1.3; }
+h2 { font-size: 1.5rem; text-align: center; }
+.subtitle { color: var(--text-dim); text-align: center; font-size: 0.95rem; }
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  color: var(--text);
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #27ae60; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #c0392b; }
+.btn-outline { background: transparent; border: 2px solid var(--border); }
+.btn-outline:hover { border-color: var(--accent); background: rgba(108,99,255,0.1); }
+.btn-ghost { background: transparent; color: var(--text-dim); font-size: 0.9rem; padding: 10px; }
+.btn .icon { font-size: 1.4em; }
+.card { background: var(--bg-card); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); }
+.game-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+.lives { display: flex; gap: 6px; font-size: 1.3rem; }
+.lives .heart { transition: all 0.3s; }
+.lives .heart.lost { opacity: 0.2; transform: scale(0.8); }
+.score-display { font-size: 1.1rem; font-weight: 600; color: var(--accent); }
+.question-counter { font-size: 0.85rem; color: var(--text-dim); }
+.timer-bar-container { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.timer-bar { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.1s linear, background-color 0.3s; width: 100%; }
+.timer-bar.warning { background: var(--warning); }
+.timer-bar.danger { background: var(--danger); }
+.settlement-name { text-align: center; padding: 48px 16px; flex: 1; display: flex; align-items: center; justify-content: center; }
+.settlement-name h2 { font-size: 2.2rem; font-weight: 700; line-height: 1.4; transition: all 0.2s; }
+.answer-buttons { display: flex; gap: 12px; }
+.answer-buttons .btn { flex: 1; padding: 20px; font-size: 1.2rem; }
+.feedback {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.feedback.show { opacity: 1; pointer-events: auto; }
+.feedback.correct { background: rgba(46,204,113,0.15); }
+.feedback.wrong { background: rgba(231,76,60,0.15); }
+.feedback .feedback-icon { font-size: 4rem; animation: popIn 0.3s ease; }
+.feedback .feedback-text { font-size: 1.2rem; font-weight: 600; }
+.feedback .feedback-answer { font-size: 0.95rem; color: var(--text-dim); }
+@keyframes popIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.results { text-align: center; display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
+.results-score { font-size: 4rem; font-weight: 800; color: var(--accent); }
+.results-label { color: var(--text-dim); font-size: 1rem; }
+.results-stat { display: flex; justify-content: center; gap: 32px; }
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stat-value { font-size: 1.5rem; font-weight: 700; }
+.stat-label { font-size: 0.8rem; color: var(--text-dim); }
+.hidden { display: none !important; }
+.screen { display: none; flex-direction: column; gap: 20px; flex: 1; width: 100%; }
+.screen.active { display: flex; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: slideIn 0.3s ease; }
+.rules-list { display: flex; flex-direction: column; gap: 12px; padding: 0; list-style: none; }
+.rules-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; line-height: 1.5; }
+.rules-list .rule-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+.share-row { display: flex; gap: 10px; margin-top: 8px; }
+.share-row .btn { flex: 1; font-size: 0.95rem; padding: 12px; }
+.best-score { color: var(--warning); font-size: 0.95rem; margin-top: -8px; }
+@media (min-width: 480px) {
+  body { padding: 24px; }
+  .settlement-name h2 { font-size: 2.8rem; }
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Home Screen -->
+    <div id="screen-home" class="screen active">
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:32px;">
+        <div style="text-align:center;">
+          <h1>קיים או לא?</h1>
+          <p class="subtitle" style="margin-top:8px;">מופיע שם של יישוב. האם הוא קיים בישראל?</p>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <button class="btn btn-primary" onclick="startGame()">
+            <span class="icon">&#x1F3AE;</span>
+            התחל לשחק
+          </button>
+        </div>
+
+        <div id="best-score-home" class="hidden" style="text-align:center;">
+          <span class="best-score">&#x1F3C6; שיא אישי: <span id="best-score-value">0</span></span>
+        </div>
+
+        <button class="btn btn-ghost" onclick="document.getElementById('rules').classList.toggle('hidden')">
+          &#x2753; איך משחקים?
+        </button>
+
+        <div id="rules" class="card hidden">
+          <ul class="rules-list">
+            <li>
+              <span class="rule-icon">&#x1F3D8;&#xFE0F;</span>
+              <span>מופיע שם של יישוב — צריך לנחש אם הוא קיים בישראל או לא</span>
+            </li>
+            <li>
+              <span class="rule-icon">&#x2764;&#xFE0F;</span>
+              <span>יש לכם 3 חיים. כל טעות = מאבדים חיים</span>
+            </li>
+            <li>
+              <span class="rule-icon">&#x23F1;&#xFE0F;</span>
+              <span>10 שניות לכל שאלה. לא עניתם בזמן? מפסידים חיים!</span>
+            </li>
+            <li>
+              <span class="rule-icon">&#x1F3AF;</span>
+              <span>1,244 יישובים אמיתיים מהרשימה הרשמית + שמות בדויים שנשמעים אמינים</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="screen-game" class="screen">
+      <div class="game-header">
+        <div class="lives" id="lives"></div>
+        <span class="question-counter" id="question-counter"></span>
+        <span class="score-display" id="score-display">0</span>
+      </div>
+
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+
+      <div class="settlement-name">
+        <h2 id="settlement-name"></h2>
+      </div>
+
+      <div class="answer-buttons">
+        <button class="btn btn-success" id="btn-exists" onclick="answer(true)">&#x2705; קיים</button>
+        <button class="btn btn-danger" id="btn-not-exists" onclick="answer(false)">&#x274C; לא קיים</button>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="screen-results" class="screen">
+      <div class="results">
+        <h2>המשחק נגמר!</h2>
+        <div class="results-score" id="final-score">0</div>
+        <div class="results-label">נקודות</div>
+        <div id="new-record" class="hidden" style="color:var(--warning); font-weight:600;">&#x1F389; שיא חדש!</div>
+
+        <div class="results-stat">
+          <div class="stat-item">
+            <span class="stat-value" id="stat-correct" style="color:var(--success)">0</span>
+            <span class="stat-label">תשובות נכונות</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="stat-wrong" style="color:var(--danger)">0</span>
+            <span class="stat-label">טעויות</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="stat-questions">0</span>
+            <span class="stat-label">שאלות</span>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+          <button class="btn btn-primary" onclick="startGame()">&#x1F504; שחק שוב</button>
+          <button class="btn btn-outline" onclick="goHome()">&#x1F3E0; חזרה לתפריט</button>
+        </div>
+
+        <div class="share-row">
+          <button class="btn btn-outline" onclick="shareResult()" style="flex:1;">
+            <span class="icon">&#x1F4E4;</span>
+            שתף תוצאה
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Feedback Overlay -->
+  <div id="feedback" class="feedback">
+    <span class="feedback-icon"></span>
+    <span class="feedback-text"></span>
+    <span class="feedback-answer"></span>
+  </div>
+
+  <script id="names-data" type="application/json">{"real":["א־סייד","אבו ג'וויעד","אבו גוש","אבו סנאן","אבו סריחאן (שבט)","אבו עבדון (שבט)","אבו עמאר (שבט)","אבו עמרה (שבט)","אבו קרינאת (שבט)","אבו רביעה (שבט)","אבו רקיק (שבט)","אבו תלול","אבטליון","אביאל","אביבים","אביגדור","אביחיל","אביטל","אביעזר","אבירים","אבן יהודה","אבן מנחם","אבן ספיר","אבן שמואל","אבני איתן","אבני חפץ","אבנת","אבשלום","אדורה","אדירים","אדמית","אדרת","אודים","אודם","אוהד","אום אל־פחם","אום אל־קוטוף","אום בטין","אומן","אומץ","אופקים","אור הגנוז","אור הנר","אור יהודה","אור עקיבא","אורה","אורות","אורטל","אורים","אורנים","אורנית","אושה","אזור","אחווה","אחוזם","אחוזת ברק","אחיהוד","אחיטוב","אחיסמך","אחיעזר","אטרש (שבט)","איבטין","איבים","אייל","איילת השחר","אילון","אילות","אילנייה","אילת","אירוס","איתמר","איתן","איתנים","אכסאל","אל־עזי","אל־עריאן","אל־רום","אלומה","אלומות","אלון הגליל","אלון מורה","אלון שבות","אלוני אבא","אלוני הבשן","אלוני יצחק","אלונים","אלי עד","אליאב","אליכי ן","אליפז","אליפלט","אליקים","אלישיב","אלישמע","אלמגור","אלמוג","אלעד","אלעזר","אלפי מנשה","אלקוש","אלקנה","אמונים","אמירים","אמנון","אמציה","אניעם","אסד (שבט)","אספר","אעבילין","אעס'ם (שבט)","אפינש (שבט)","אפיק","אפיקים","אפק","אפרת","ארבל","ארגמן","ארז","אריאל","ארסוף","אשבול","אשבל","אשדוד","אשדות יעקב (איחוד)","אשדות יעקב (מאוחד)","אשחר","אשכולות","אשל הנשיא","אשלים","אשקלון","אשרת","אשתאול","באקה אל־ר'רבייה","באר אורה","באר גנים","באר טובייה","באר יעקב","באר מלכה","באר שבע","בארות יצחק","בארותיים","בארי","בוסתן הגליל","בוצרה","בוקעאת'א","בורגתה","בחן","בטחה","ביצרון","ביר אל־מכסור","ביר הדאג'","ביריה","בית אורן","בית אל","בית אלעזרי","בית אלפא","בית אריה – עופרים","בית ברל","בית גוברין","בית גמליאל","בית ג'ן","בית דגן","בית הגדי","בית הלוי","בית הלל","בית העמק","בית הערבה","בית השיטה","בית זייד","בית זית","בית זרע","בית חורון","בית חירות","בית חלקיה","בית חנן","בית חנניה","בית חשמונאי","בית יהושע","בית יוסף","בית ינאי","בית יצחק – שער חפר","בית לחם הגלילית","בית מאיר","בית נחמיה","בית ניר","בית נקופה","בית עובד","בית עוזיאל","בית עזרא","בית עריף","בית צבי","בית קמה","בית קשת","בית רבן","בית רימון","בית שאן","בית שמש","בית שערים","בית שקמה","ביתן אהרן","ביתר עילית","בלפוריה","בן זכאי","בן עמי","בן שמן","בני ברק","בני דקלים","בני דרום","בני דרור","בני יהודה","בני נצרים","בני עטרות","בני עי\"ש","בני ציון","בני ראם","בניה","בנימינה – גבעת עדה","בסמ\"ה","בסמת טבעון","בעינה–נג'ידאת","בענה","בצת","בקוע","בקעות","בר גיורה","בר־יוחאי","ברוכין","ברור חיל","ברוש","ברכה","ברכיה","ברעם","ברק","ברקאי","ברקן","ברקת","בת הדר","בת חן","בת חפר","בת ים","בת עין","בת שלמה","גאולי תימן","גאולים","גאליה","גבולות","גבים","גבע","גבע בנימין","גבע כרמל","גבעולים","גבעון החדשה","גבעות בר","גבעות עדן","גבעת אבני","גבעת אלה","גבעת ברנר","גבעת השלושה","גבעת זאב","גבעת ח\"ן","גבעת חביבה","גבעת חיים (איחוד)","גבעת חיים (מאוחד)","גבעת יואב","גבעת יערים","גבעת ישעיהו","גבעת כ\"ח","גבעת ניל\"י","גבעת עוז","גבעת שמואל","גבעת שמש","גבעת שפירא","גבעתי","גבעתיים","גברעם","גבת","גדות","ג'דידה–מכר","גדיש","גדעונה","גדרה","ג'וליס","גונן","גורן","גורנות הגליל","גזית","גזר","גיאה","גיבתון","גיזו","גילון","גילת","גינוסר","גיניגר","גינתון","ג'יסר א־זרקאא","גיתה","גיתית","גלאון","ג'לג'וליה","גלגל","גליל ים","גלעד (אבן יצחק)","גמזו","גן הדרום","גן השומרון","גן חיים","גן יאשיה","גן יבנה","גן־נר","גן שורק","גן שלמה","גן שמואל","ג'נאביב (שבט)","גנות","גנות הדר","גני הדר","גני טל","גני יוחנן","גני מודיעין","גני תקווה","גניעם","געש","געתון","גפן","גרופית","ג'ש (גוש חלב)","גשור","גשר","גשר הזיו","גת","ג'ת","גת רימון","דאליית אל־כרמל","דבורה","דבוריה","דביר","דברת","דגניה א","דגניה ב","דוב\"ב","דולב","דור","דורות","דחי","דימונה","דיר אל־אסד","דיר חנא","דיר ראפאת","דישון","דלייה","דלתון","דמידה","דן","דפנה","דקל","דריג'את","האון","הבונים","הגושרים","הדר עם","הוד השרון","הודיות","הודייה","הוואשלה (שבט)","הושעיה","הזורע","הזורעים","הזייל (שבט)","החותרים","היוגב","הילה","המעפיל","הסוללים","העוגן","הר אדר","הר גילה","הר עמשא","הראל","הרדוף","הרצליי ה","הררית","ורד יריחו","ורדון","זבארקה (שבט)","זבדיאל","זוהר","זיכרון יעקב","זיקים","זיתן","זכריה","זמר","זמרת","זנוח","זרועה","זרזי ר","זרחיה","חבצלת השרון","חבר","חגור","חגי","חג'יראת (זהרה) (שבט)","חד־נס","חדיד","חדרה","חוגלה","ח'וואליד","חולדה","חולון","חולית","חולתה","חוסן","חוסנייה","חופית","חוקוק","חורה","חורפיש","חורשים","חזון","חיבת ציון","חיננית","חיפה","חירות","חלוץ","חלץ","חמ\" ד","חמאם","חמדיה","חמדת","חמרה","חניאל","חניתה","חנתון","חספין","חפץ חיים","חפצי־בה","חצב","חצבה","חצור (אשדוד)","חצור הגלילית","חצרים","חרב לאת","חרוצים","חריש","חרמש","חרשים","חשמונאים","טבריה","טובא–זנר'רייה","טורעאן","טייבה","טייבה (בעמק)","טירה","טירת יהודה","טירת כרמל","טירת צבי","טל־אל","טל שחר","טללים","טלמון","טמרה","טמרה (בעמק)","טנא","טפחות","יאנו ח–ג'ת","יבול","יבנאל","יבנה","יגור","יגל","יד בנימין","יד השמונה","יד חנה","יד מרדכי","יד נתן","יד רמב\"ם","ידידה","יהוד–מונוסון","יהל","יובל","יובלים","יודפת","יוטבתה","יונתן","יוקנעם (מושבה)","יוקנעם עילית","יושיביה","יזרעאל","יחיעם","ייט\"ב","יינון","יירכא","יכיני","ינוב","יסוד המעלה","יסודות","יסעור","יעד","יעף","יערה","יפיע (יאפת א־נאס'רה)","יפית","יפעת","יפת ח","יצהר","יציץ","יקום","יקיר","יראון","ירדנה","ירוחם","ירושלים","ירחיב","ירקונה","ישע","ישעי","ישרש","יתד","כאבול","כברי","כדורי","כדיתה","כווכב אבו אל־היג'א","כוחלה","כוכב השחר","כוכב יאיר – צור יגאל","כוכב יעקב","כוכב מיכאל","כורזים","כחל","כינרת (מושבה)","כינרת (קבוצה)","כיסופים","כיסרא–סמיע","כישור","כלי ל","כלנית","כמאנה","כמהין","כמון","כנות","כנף","כסיפה","כסלון","כעבייה–טבאש –חג'אג'רה","כפר אביב","כפר אדומים","כפר אוריה","כפר אחים","כפר ביאליק","כפר ביל\"ו","כפר בלום","כפר בן־נון","כפר ברא","כפר ברוך","כפר גדעון","כפר גלי ם","כפר גליקסון","כפר גלעדי","כפר דניאל","כפר האורנים","כפר החורש","כפר המכבי","כפר הנגיד","כפר הנוער הדתי","כפר הנשיא","כפר הס","כפר הרא\"ה","כפר הרי\"ף","כפר ויתקין","כפר ורבורג","כפר ורדים","כפר זוהרי ם","כפר זיתי ם","כפר חב\"ד","כפר חושן","כפר חיטים","כפר חיים","כפר חנניה","כפר חסידים א","כפר חסידים ב","כפר חרוב","כפר טרומן","כפר יאסיף","כפר ידידיה","כפר יהושע","כפר יונה","כפר יחזקאל","כפר יעבץ","כפר כמא","כפר כנ א","כפר מונש","כפר מימון","כפר מיס'ר","כפר מל\"ל","כפר מנדא","כפר מנחם","כפר מסריק","כפר מרדכי","כפר נטר","כפר סאלד","כפר סבא","כפר סילבר","כפר סירקין","כפר עבודה","כפר עזה","כפר עציו ן","כפר פינס","כפר קאסם","כפר קיש","כפר קרע","כפר ראש הנקרה","כפר רוזנוולד (זרעית)","כפר רופי ן","כפר רות","כפר רתמים","כפר שמאי","כפר שמואל","כפר שמריהו","כפר תבור","כפר תפו ח","כרכום","כרם ביבנה (ישיבה)","כרם בן זמרה","כרם בן שמן","כרם מהר\"ל","כרם שלום","כרמי יוסף","כרמי צור","כרמי קטיף","כרמיאל","כרמייה","כרמים","כרמל","לבון","לביא","לבנים","להב","להבות הבשן","להבות חביבה","להבים","לוד","לוזית","לוחמי הגטאות","לוטם","לוטן","לימן","לכיש","לפיד","לפידות","לקייה","מאור","מאיר שפיה","מבוא ביתר","מבוא דותן","מבוא חורון","מבוא חמה","מבוא מודיעים","מבואות ים","מבועים","מבטחים","מבקיעים","מבשרת ציון","מג'ד אל־כרום","מגדים","מגדל","מגדל העמק","מגדל עוז","מג'דל שמס","מגדלים","מגידו","מגל","מגן","מגן שאול","מגשימים","מדרך עוז","מדרשת בן־גוריון","מדרשת רופין","מודיעין עילית","מודיעין– מכבים–רעות","מולדת","מוצא עילית","מורן","מורשת","מזור","מזכרת בתיה","מזרע","מזרעה","מחולה","מחניים","מחסיה","מטולה","מטע","מי עמי","מיטב","מיטל","מיסר","מירון","מישר","מיתר","מכורה","מכחול","מכמורת","מכמנים","מלאה","מלילות","מלכייה","מנוחה","מנוף","מנות","מנחמיה","מנרה","מנשיית א־זבדה","מסד","מסדה","מסילות","מסילת ציון","מסלול","מסעדה","מסעודין אל־עזאזמה (שבט )","מעברות","מעגלים","מעגן","מעגן מיכאל","מעוז חיים","מעון","מעונה","מעיין ברוך","מעיין צבי","מעלה אדומים","מעלה אפרים","מעלה גלבוע","מעלה גמלא","מעלה החמישה","מעלה לבונה","מעלה מכמש","מעלה עירון","מעלה עמוס","מעלה שומרון","מעלות–תרשיחא","מעליא","מענית","מעש","מפלסים","מצדות יהודה","מצובה","מצליח","מצפה","מצפה אבי\"ב","מצפה אילן","מצפה יריחו","מצפה נטופה","מצפה רמון","מצפה שלם","מצר","מקיבלה","מקווה ישראל","מר'אר","מרב","מרגליות","מרום גולן","מרחב עם","מרחביה (מושב)","מרחביה (קיבוץ)","מרכז שפירא","משאבי שדה","משגב דב","משגב עם","משהד","משואה","משואות יצחק","משכיות","משמר איילון","משמר דוד","משמר הירדן","משמר הנגב","משמר העמק","משמר השבעה","משמר השרון","משמרות","משמרת","משען","מתן","מתת","מתתיהו","נאות גולן","נאות הכיכר","נאות מרדכי","נאות סמדר","נאעורה","נבטים","נגבה","נגוהות","נהורה","נהלל","נהרייה","נוב","נוגה","נווה","נווה אבות","נווה אור","נווה אטי\"ב","נווה אילן","נווה איתן","נווה דניאל","נווה זוהר","נווה זיו","נווה חריף","נווה ים","נווה ימין","נווה ירק","נווה מבטח","נווה מיכאל","נווה צוף","נווה שלום","נועם","נוף איילון","נוף הגליל","נופים","נופית","נופך","נוקדים","נורדייה","נורית","נחושה","נחל עוז","נחלה","נחליאל","נחלים","נחם","נחף","נחשולים","נחשון","נחשונים","נטועה","נטור","נטע","נטעים","נטף","ניל\"י","נין","ניצ ן","ניצן ב","ניצנה","ניצני סיני","ניצני עוז","ניצנים","ניר אליהו","ניר בנים","ניר גלים","ניר ח\"ן","ניר יפ ה","ניר יצחק","ניר ישרא ל","ניר משה","ניר עוז","ניר עם","ניר עציון","ניר עקיבא","ניר צבי","נירים","נירית","נמרוד","נס הרים","נס עמים","נס ציונה","נס'אס'רה (שבט)","נעורים","נעלה","נעמ\"ה","נען","נערן","נצר חזני","נצר סרני","נצרת","נשר","נתיב הגדוד","נתיב הל\"ה","נתיב העשרה","נתיב השיירה","נתיבות","נתניה","סאג'ור","סאסא","סביון","סגולה","סוואעד (חמירה)","סוואעד (כמאנה)","סולם","סוסיה","סופה","סח'נין","סלאמה","סלעית","סמר","ס'נדלה","סנסנה","סעד","סעווה","סער","ספיר","סתרייה","עארה–ערערה","עבדון","עברון","עגור","עדי","עדנים","עוזה","עולש","עומר","עופר","עופרה","עוצם","עוקבי (בנו עוקבה)","עזוז","עזיר","עזר","עזריאל","עזריה","עזריקם","עטאוונה","עטרת","עידן","עיינות","עילבון","עילוט","עין איילה","עין אל־אסד","עין גב","עין גדי","עין דור","עין הבשור","עין הוד","עין החורש","עין המפרץ","עין הנצי\"ב","עין העמק","עין השופט","עין השלושה","עין ורד","עין זיוון","עין חוד","עין חצבה","עין חרוד (איחוד)","עין חרוד (מאוחד)","עין יהב","עין יעקב","עין כרם (בית ספר חקלאי )","עין כרמל","עין מאהל","עין נקובא","עין עירון","עין צורים","עין קיניה","עין ראפה","עין שמר","עין שריד","עין תמר","עינב","עינת","עיר אובות","עכו","עלומים","עלי","עלי זהב","עלמה","עלמון","עמוקה","עמיחי","עמינדב","עמיעד","עמיעוז","עמיקם","עמיר","עמנואל","עמקה","עספייא","עפולה","עץ אפרים","עצמון (שגב)","עראבה","עראמשה","ערב א־נעים","ערד","ערוגות","ערערה בנגב","עשרת","עתלית","עתניאל","פאר ן","פדואל","פדויים","פדיה","פורייה (כפר עבודה)","פורייה (נווה עובד)","פורייה עילית","פורת","פטיש","פל ך","פלמחים","פני חבר","פסגות","פסוטה","פעמי תש\"ז","פצא ל","פקיעין","פקיעין החדשה","פרדס חנה – כרכור","פרדסייה","פרוד","פרזו ן","פרי גן","פרידיס","פתח תקווה","פתחיה","צאלים","צבייה","צבעון","צובה","צוחר","צופים","צופית","צופר","צוקי ים","צוקים","צור הדסה","צור יצחק","צור משה","צור נתן","צוריאל","צורית","צורעה","ציפור י","צלפו ן","צפריי ה","צפרירי ם","צפת","צרופה","קבועה (שבט)","קבוצת יבנה","קדומים","קדימה–צורן","קדיראת א־ס'אנע (שבט)","קדמה","קדמת צבי","קדר","קדרון","קדרים","קוואעין (שבט)","קוממיות","קורנית","קטורה","קיסריה","קלחים","קליה","קלנסווה","קלע","קס'ר א־סיר","קציר","קצרין","קריית אונו","קריית ארבע","קריית אתא","קריית ביאליק","קריית גת","קריית טבעון","קריית ים","קריית יערים","קריית מוצקין","קריית מלאכי","קריית נטפים","קריית ענבים","קריית עקרון","קריית שלמה","קריית שמונה","קרני שומרון","קשת","ראמה","ראס אל־עין","ראס עלי","ראש העין","ראש פינה","ראש צורים","ראשון לציון","רבבה","רבדים","רביבים","רביד","רגבה","רגבים","ר'ג'ר","רהט","רווחה","רוויה","רוח מדבר","רוחמה","רומאנה","רומת אל־היב","רועי","רחוב","רחובות","רחלים","ריחאנייה","ריחן","רימונים","רינה","רינתיה","רכסים","רם־און","רמות","רמות השבים","רמות מאיר","רמות מנשה","רמות נפתלי","רמלה","רמת גן","רמת דוד","רמת הכובש","רמת השופט","רמת השרון","רמת טראמפ","רמת יוחנן","רמת ישי","רמת מגשימים","רמת צבי","רמת רזיאל","רמת רחל","רנן","רעים","רעננה","רקפת","רשפון","רשפי ם","שאר ישוב","שבי דרום","שבי ציון","שבי שומרון","שגב שלום","שדה אילן","שדה אליהו","שדה אליעזר","שדה בוקר","שדה דוד","שדה ורבורג","שדה יואב","שדה יעקב","שדה יצחק","שדה משה","שדה נחום","שדה נחמיה","שדה ניצן","שדה עוזיהו","שדה צבי","שדות ים","שדות מיכה","שדי אברהם","שדי חמד","שדי תרומות","שדמה","שדמות דבורה","שדמות מחולה","שדרות","שואבה","שובה","שובל","שוהם","שומרה","שומרייה","שוקדה","שורש","שורשים","שושנת העמקים","שזור","שחר","שחרות","שיבולים","שיבלי – אום אל־ר'נם","שיח' דנון","שילה","שילת","שכניה","שלווה","שלוחות","שלומי","שלומית","שמיר","שמעה","שמרת","שמשית","שני","שניר","שעב","שעל","שעלבים","שער אפרים","שער הגולן","שער העמקים","שער מנשה","שערי תקווה","שפיים","שפיר","שפר","שפרעם","שקד","שקף","שרונה","שריגים (לי־און)","שריד","שרשרת","שתולה","שתולים","תאשור","תדהר","תובל","תומר","תושייה","תימורים","תירוש","תל־אביב–יפו","תל יוסף","תל יצחק","תל מונד","תל עדשים","תל עמל (ניר דוד)","תל קציר","תל שבע","תל תאומים","תלם","תלמי אליהו","תלמי אלעזר","תלמי ביל\"ו","תלמי יוסף","תלמי יחיאל","תלמי יפה","תלמים","תמרת","תנובות","תעוז","תפרח","תקומה","תקוע","תראבין א־ס'אנע","תרום"],"fake":["כפר אורנים","כפר נחל","כפר שושן","כפר הדקל","כפר תאנים","כפר צבר","כפר נעמן","כפר הגפן","כפר עומר","כפר דוד","כפר שגיא","כפר הגליל","כפר מעון","כפר רימון","כפר נריה","כפר עדן","בית נחום","בית ענת","בית עמוס","בית ישי","בית שלום","בית רחל","בית יונה","בית גדעון","בית אמונה","בית הכרמים","בית דוד","בית נורית","בית ענבר","בית חנה","בית גבריאל","בית מרים","גבעת אורן","גבעת הזית","גבעת רמון","גבעת מורן","גבעת שקד","גבעת אגוז","גבעת ענבל","גבעת עדי","גבעת סיגל","גבעת אמיר","גבעת אשר","גבעת דוד","תל חיים","תל ברוש","תל אורן","תל נחל","תל שמשון","תל נוגה","תל צופים","תל שלום","תל אריה","עין דבש","עין נחל","עין תאנה","עין נרקיס","נווה ברוש","נווה כרמל","נווה דקל","נווה גלים","נווה עמק","נווה רעות","נווה עדן","נווה ברק","נווה שגב","נווה אמיר","נווה הדר","מעלה חרמון","מעלה שגב","מעלה חן","מעלה צופים","מעלה ארזים","מעלה דוד","מעלה נוף","מעלה ענן","מעלה עוז","שדה אורן","שדה רחל","שדה שושנים","שדה עמוס","שדה גנים","שדה ברכה","ניר אביב","ניר שלום","ניר הדר","ניר נעמי","ניר אורן","ניר ברוש","מצפה כרמל","מצפה גלבוע","מצפה שלום","מצפה ים","מצפה עוז","קריית חן","קריית דוד","קריית אורנים","קריית אלון","קריית נחל","שיזפים","יסמין","חבצלת","ספירון","עמיצור","מגדלון","אדמה","שמשון","דבורים","צופיה","מרגנית","סהרון","באר דוד","גן שרון","גן אלון","רמת אשר","רמת נוף","רמת שגב","רמת ברוש","רמת אורן","אור הנגב","אור גליל","כרם נחל","כרם דוד","כרם אורן","מבוא גליל","מבוא שמש","מבוא הרים","משמר הגליל","משמר הכרמל","משמר הנחל","משמר הים","נתיב הנחל","נתיב השרון","נתיב הים","נתיב הגליל","בני אלון","בני עוז","בני שמש","אבן דוד","אבן חן","הר שגב","עתידה","תמיר","ענבר","עצמה","כפר הרימון","כפר אשכול","כפר מעיין","כפר צור","בית אלמוג","בית ארז","בית הדס","בית סלע","גבעת תמר","גבעת ליבנה","גבעת נחשול","גבעת צוף","תל גפן","תל מורן","תל זית","תל כרמל","עין ברוש","עין אלון","עין גפן","נווה סלע","נווה תמיר","נווה ארז","נווה נוף","מעלה תמר","מעלה סלע","מעלה כרמל","שדה תמיר","ניר ענבר","ניר תמיר","מצפה נחל","מצפה ארז","מצפה שגיא","קריית דגן","קריית ענבר","צמרון","ליבנים","חרצית","דגנית","שגבים","שחרית","ברכות","באר שלום","באר עדן","גן אורנים","גן צבעוני","רמת עמק","רמת ליבנה","אור שרון","אור נגב","אור עמק","כרם תבור","כרם גליל","כרם שרון","מבוא נגב","מבוא שרון","מבוא עמק","נתיב שמש","נתיב עמק","נתיב כרמל","בני שגב","בני ארז","בני נחל","הר שמש","הר ארז","כפר הצבעונים","כפר נרגיל","כפר אלמנדה","כפר הברושים","כפר שלדג","כפר חוגלה","כפר גמלא","כפר מצלעות","בית ליטאי","בית מנשור","בית כלנית","בית ריקמה","בית פסיפס","בית מגורה","בית אפרסמון","גבעת סחלב","גבעת אירוס","גבעת חצבים","גבעת צבעוני","גבעת נרקיסים","גבעת כרכום","תל חרובים","תל צלף","תל דגנים","תל שושנים","תל כרמים","נווה סחלב","נווה מדבר","נווה צבעוני","נווה בשמת","מעלה ברושים","מעלה גדיש","מעלה נחשולים","מעלה שמשון","שדה נורית","שדה כלנית","שדה חרצית","שדה גפנים","שדה פרגים","ניר סחלב","ניר אגמון","ניר ברושים","ניר כלנית","מצפה כנרת","מצפה תבורי","מצפה סלעים","קריית מעון","קריית דגנים","קריית סלעים","באר אורנים","באר מישור","גן כלנית","גן סחלב","גן ברושים","רמת כלנית","רמת סחלב","רמת מדבר","אור כרמל","אור ברושים","כרם ברושים","כרם נורית","משמר הכרמים","משמר הגפנים","נתיב ברושים","נתיב הרימון","בני כרמל","בני גפנים","הר ברוש","הר סחלב","שיזפון","נרגילה","גפנון","סחלבית","אפרסמון","רותמית","חלמישון","צבעונית","דובדבן","תפוזית","אשכולית","ברקנית","גרניתון","עמקון","נחלון","גבעתון","הדרון","כפרון","מושבון","נחלאי","גבעתאי"]}</script>
+
+  <script>
+// === Data ===
+const namesData = JSON.parse(document.getElementById('names-data').textContent);
+
+// === Utilities ===
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateQuestions(count) {
+  const halfReal = Math.ceil(count / 2);
+  const halfFake = count - halfReal;
+  const reals = shuffle(namesData.real).slice(0, halfReal).map(name => ({ name, exists: true }));
+  const fakes = shuffle(namesData.fake).slice(0, halfFake).map(name => ({ name, exists: false }));
+  return shuffle([...reals, ...fakes]);
+}
+
+class GameTimer {
+  constructor(durationMs, onTick, onExpire) {
+    this.duration = durationMs;
+    this.onTick = onTick;
+    this.onExpire = onExpire;
+    this.startTime = null;
+    this.rafId = null;
+    this.running = false;
+  }
+  start() {
+    this.startTime = performance.now();
+    this.running = true;
+    this._tick();
+  }
+  _tick() {
+    if (!this.running) return;
+    const elapsed = performance.now() - this.startTime;
+    const remaining = Math.max(0, this.duration - elapsed);
+    const fraction = remaining / this.duration;
+    this.onTick(fraction, remaining);
+    if (remaining <= 0) { this.running = false; this.onExpire(); return; }
+    this.rafId = requestAnimationFrame(() => this._tick());
+  }
+  stop() {
+    this.running = false;
+    if (this.rafId) { cancelAnimationFrame(this.rafId); this.rafId = null; }
+  }
+}
+
+function showFeedback(isCorrect, correctAnswer) {
+  const el = document.getElementById('feedback');
+  el.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+  el.querySelector('.feedback-icon').textContent = isCorrect ? '\u2714' : '\u2718';
+  el.querySelector('.feedback-text').textContent = isCorrect ? '\u05E0\u05DB\u05D5\u05DF!' : '\u05DC\u05D0 \u05E0\u05DB\u05D5\u05DF';
+  el.querySelector('.feedback-answer').textContent = correctAnswer ? `\u05D4\u05EA\u05E9\u05D5\u05D1\u05D4: ${correctAnswer}` : '';
+  setTimeout(() => { el.className = 'feedback'; }, 1000);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const s = document.getElementById(id);
+  if (s) { s.classList.add('active'); s.classList.add('animate-in'); }
+}
+
+function updateTimerBar(bar, fraction) {
+  bar.style.width = (fraction * 100) + '%';
+  bar.classList.remove('warning', 'danger');
+  if (fraction < 0.2) bar.classList.add('danger');
+  else if (fraction < 0.4) bar.classList.add('warning');
+}
+
+// === Best Score ===
+function getBestScore() {
+  return parseInt(localStorage.getItem('yeshuvim-best') || '0');
+}
+function saveBestScore(s) {
+  if (s > getBestScore()) {
+    localStorage.setItem('yeshuvim-best', s);
+    return true;
+  }
+  return false;
+}
+function showBestOnHome() {
+  const best = getBestScore();
+  if (best > 0) {
+    document.getElementById('best-score-value').textContent = best;
+    document.getElementById('best-score-home').classList.remove('hidden');
+  }
+}
+
+// === Game State ===
+const TIMER_DURATION = 10000;
+const MAX_LIVES = 3;
+let questions = [], currentIndex = 0, score = 0, lives = MAX_LIVES;
+let correctCount = 0, wrongCount = 0, timer = null, answered = false;
+
+const elName = document.getElementById('settlement-name');
+const elLives = document.getElementById('lives');
+const elScore = document.getElementById('score-display');
+const elCounter = document.getElementById('question-counter');
+const elTimerBar = document.getElementById('timer-bar');
+const elBtnExists = document.getElementById('btn-exists');
+const elBtnNotExists = document.getElementById('btn-not-exists');
+
+function renderLives() {
+  elLives.innerHTML = '';
+  for (let i = 0; i < MAX_LIVES; i++) {
+    const span = document.createElement('span');
+    span.className = 'heart' + (i >= lives ? ' lost' : '');
+    span.textContent = '\u2764\uFE0F';
+    elLives.appendChild(span);
+  }
+}
+
+function goHome() {
+  if (timer) timer.stop();
+  showBestOnHome();
+  showScreen('screen-home');
+}
+
+function startGame() {
+  questions = generateQuestions(50);
+  currentIndex = 0;
+  score = 0;
+  lives = MAX_LIVES;
+  correctCount = 0;
+  wrongCount = 0;
+  answered = false;
+  showScreen('screen-game');
+  renderLives();
+  elScore.textContent = '0';
+  showQuestion();
+}
+
+function showQuestion() {
+  if (lives <= 0 || currentIndex >= questions.length) { endGame(); return; }
+  answered = false;
+  const q = questions[currentIndex];
+  elName.textContent = q.name;
+  elCounter.textContent = `${currentIndex + 1}`;
+  elBtnExists.disabled = false;
+  elBtnNotExists.disabled = false;
+  elTimerBar.style.width = '100%';
+  elTimerBar.classList.remove('warning', 'danger');
+  if (timer) timer.stop();
+  timer = new GameTimer(TIMER_DURATION, (f) => updateTimerBar(elTimerBar, f), () => handleTimeout());
+  timer.start();
+}
+
+function handleTimeout() {
+  if (answered) return;
+  answered = true;
+  elBtnExists.disabled = true;
+  elBtnNotExists.disabled = true;
+  lives--; wrongCount++;
+  renderLives();
+  const q = questions[currentIndex];
+  showFeedback(false, `${q.name} — ${q.exists ? 'קיים' : 'לא קיים'}`);
+  currentIndex++;
+  setTimeout(() => showQuestion(), 1100);
+}
+
+function answer(playerSaysExists) {
+  if (answered) return;
+  answered = true;
+  if (timer) timer.stop();
+  elBtnExists.disabled = true;
+  elBtnNotExists.disabled = true;
+  const q = questions[currentIndex];
+  const isCorrect = playerSaysExists === q.exists;
+  if (isCorrect) {
+    score++; correctCount++;
+    elScore.textContent = score;
+    showFeedback(true, '');
+  } else {
+    lives--; wrongCount++;
+    renderLives();
+    showFeedback(false, `${q.name} — ${q.exists ? 'קיים' : 'לא קיים'}`);
+  }
+  currentIndex++;
+  setTimeout(() => showQuestion(), 1100);
+}
+
+function endGame() {
+  if (timer) timer.stop();
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('stat-correct').textContent = correctCount;
+  document.getElementById('stat-wrong').textContent = wrongCount;
+  document.getElementById('stat-questions').textContent = currentIndex;
+
+  const isRecord = saveBestScore(score);
+  document.getElementById('new-record').classList.toggle('hidden', !isRecord);
+
+  showScreen('screen-results');
+}
+
+function shareResult() {
+  const text = `🏘️ קיים או לא?\nענתי נכון על ${score} שאלות מתוך ${currentIndex}!\nבואו לנסות:`;
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: 'קיים או לא?', text, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text + ' ' + url).then(() => {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--border);padding:12px 24px;border-radius:10px;font-size:0.9rem;z-index:200;';
+      toast.textContent = 'הועתק!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    });
+  }
+}
+
+// Init
+showBestOnHome();
+  </script>
+</body>
+</html>
